@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.20)
 project(rund)
 
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED YES)
+
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)
     set(is_x64 TRUE)
 else()
@@ -23,3 +26,5 @@ endif()
 
 add_executable(rund WIN32 ${SOURCES})
 target_link_libraries(rund d3d9 d3dx9)
+
+file(COPY assets DESTINATION ${CMAKE_BINARY_DIR})
