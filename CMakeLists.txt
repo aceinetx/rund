@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.20)
 project(rund)
 
+add_compile_options("/utf-8")
+add_subdirectory("fmt")
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 
@@ -17,6 +20,7 @@ set(SOURCES ${RUND_SOURCES} ${IMGUI_SOURCES})
 
 include_directories("include" "imgui" "imgui/backends")
 include_directories("C:/Program Files (x86)/Microsoft DirectX SDK (June 2010)/Include")
+include_directories("fmt/include")
 
 if(is_x64)
     link_directories("C:/Program Files (x86)/Microsoft DirectX SDK (June 2010)/Lib/x64")
@@ -25,6 +29,4 @@ else()
 endif()
 
 add_executable(rund WIN32 ${SOURCES})
-target_link_libraries(rund d3d9 d3dx9)
-
-file(COPY assets DESTINATION ${CMAKE_BINARY_DIR})
+target_link_libraries(rund d3d9 d3dx9 fmt)
