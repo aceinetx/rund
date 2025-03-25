@@ -6,6 +6,7 @@
 #include <codecvt>
 #include <locale>
 #include <fmt/format.h>
+#include <windows.h>
 
 std::string rund::assetsDir = "";
 char* rund::input = nullptr;
@@ -32,10 +33,9 @@ void rund::Main(){
 
     strncpy(rund::fileBrowserPath, "C:\\", RUND_STRING_SIZE);
 
+    ImGuiIO &io = ImGui::GetIO();
+    io.IniFilename = nullptr;
     if(!rund::assetsDir.empty()){
-        ImGuiIO &io = ImGui::GetIO();
-        io.IniFilename = nullptr;
-
         ImVector<ImWchar> ranges;
         ImFontGlyphRangesBuilder builder;
         builder.AddText("");
@@ -63,7 +63,12 @@ void rund::RenderMain(){
 
     ImGui::Separator();
 
-    ImGui::Button("OK");
+    if(ImGui::Button("OK")){
+        if((rund::input[0] >= 'A' && rund::input[0] <= 'Z') && rund::input[1] == ':'){ // check if it's a disk
+
+        }
+        ShellExecuteA(NULL, "open", rund::input, NULL, NULL, SW_SHOWDEFAULT);
+    }
     ImGui::SameLine();
     if(ImGui::Button("Cancel")) rund::done = true;
     ImGui::SameLine();
@@ -75,16 +80,39 @@ void rund::RenderFileBrowser(){
     ImGui::SameLine();
     ImGui::InputText("##path", rund::fileBrowserPath, RUND_STRING_SIZE);
 
-    for (const auto & entry : std::filesystem::directory_iterator(rund::fileBrowserPath)){
-        if(!entry.is_directory()) continue;
-        //ImGui::Button(std::format(" {}", entry.path().filename()).c_str());
-        ImGui::Button(fmt::format(" {}", entry.path().filename().string()).c_str());
+    if(!std::filesystem::exists(rund::fileBrowserPath)){
+        ImGui::Text("Invalid path");
+        return;
     }
 
-    for (const auto & entry : std::filesystem::directory_iterator(rund::fileBrowserPath)){
-        if(!entry.is_regular_file()) continue;
-        // 
-        ImGui::Button(fmt::format(" {}", entry.path().filename().string()).c_str());
+    if(ImGui::Button("..")){
+        strncpy(rund::fileBrowserPath, std::filesystem::path(rund::fileBrowserPath).parent_path().string().c_str(), RUND_STRING_SIZE);
+    }
+
+    try {
+        for (const auto & entry : std::filesystem::directory_iterator(rund::fileBrowserPath)){
+            if(!entry.is_directory()) continue;
+            if(ImGui::Button(fmt::format(" {}", entry.path().filename().string()).c_str())){
+                strncpy(rund::fileBrowserPath, entry.path().string().c_str(), RUND_STRING_SIZE);
+            }
+        }
+
+        for (const auto & entry : std::filesystem::directory_iterator(rund::fileBrowserPath)){
+            if(!entry.is_regular_file()) continue;
+            if(ImGui::Button(fmt::format(" {}", entry.path().filename().string()).c_str())){
+                rund::fileBrowser = !rund::fileBrowser;
+                strncpy(rund::input, entry.path().string().c_str(), RUND_STRING_SIZE);
+            }
+        }
+    } catch (std::filesystem::filesystem_error &e){
+        std::string what = "";
+        bool afterColumn = false;
+        for(char c : std::string(e.what())){
+            if(afterColumn) what.push_back(c);
+            if(c == ':') afterColumn = true;
+        }
+
+        ImGui::Text("%s", what.c_str());
     }
 }
 
@@ -96,6 +124,7 @@ void rund::RenderFrame(){
 
     if(rund::assetsDir.empty()){
         ImGui::Text("Check failed: rund::assetsDir.empty() == true");
+        ImGui::Text("(Are the assets installed?)");
         ImGui::End();
         return;
     }
