@@ -14,16 +14,15 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
 
     - name: Set up CMake
-      uses: jwlawson/actions-setup-cmake@v1
+      uses: jwlawson/actions-setup-cmake@v2
       with:
         cmake-version: '3.31.6'
 
     - name: Configure
       run: |
-        cd ..
         cmake -S . -B build
 
     - name: Build
